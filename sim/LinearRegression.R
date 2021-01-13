@@ -5,9 +5,9 @@ library('plyr')
 fsim <- function(seed, n, p, pinf, n.test, mu, sigma.y, corr, tau){
   source('DeselectBoost.R')
   
-  selectedVar.risk = vector('list',9) 
-  true.positive.risk = vector('list',9) 
-  false.positive.risk = vector('list',9)
+  selectedVar.risk <- vector('list',9) 
+  true.positive.risk <- vector('list',9) 
+  false.positive.risk <- vector('list',9)
   MSEP <- vector('list',9)
   
   loss <- function(y,f){(y - f)^2}
@@ -44,11 +44,11 @@ fsim <- function(seed, n, p, pinf, n.test, mu, sigma.y, corr, tau){
   for(k in tau){
     i = i+1
     glm1_after <- DeselectBoost(glm1, data = dat.train, fam = Gaussian(), tau = k)
-    selectedVar.risk[[i]] <- names(coef(glm1_after$model)[-1])
+    selectedVar.risk[[i]] <- names(coef(glm1_after)[-1])
     true.positive.risk[[i]] <- length(which(true.var %in% selectedVar.risk[[i]]))
     false.positive.risk[[i]] <- length(which(false.var %in% selectedVar.risk[[i]]))
 
-    MSEP[[i]] <- mean(loss(dat.test$y, predict(glm1_after$model, newdata = dat.test, type = 'response')))
+    MSEP[[i]] <- mean(loss(dat.test$y, predict(glm1_after, newdata = dat.test, type = 'response')))
   }
 
   #################################
@@ -77,7 +77,7 @@ fsim <- function(seed, n, p, pinf, n.test, mu, sigma.y, corr, tau){
   false.positive.risk[[2]] <- length(which(false.var %in% names(coef(glm1_robustC))))
   MSEP[[2]] <-  mean(loss(dat.test$y, predict(glm1_robustC,newdata=dat.test,type = "response")))
   
-  return(list(Variables = selectedVar.risk,MSEP = MSEP, seed = seed, true.positive.risk = true.positive.risk, false.positive.risk = false.positive.risk, mstop = stopIT, opt_stop_oSE = opt_stop_oSE, opt_stop_rC = opt_stop_rC, beta = beta))
+  return(list(Variables = selectedVar.risk, MSEP = MSEP, seed = seed, true.positive.risk = true.positive.risk, false.positive.risk = false.positive.risk, mstop = stopIT, opt_stop_oSE = opt_stop_oSE, opt_stop_rC = opt_stop_rC, beta = beta))
 }  
 
 n = 500

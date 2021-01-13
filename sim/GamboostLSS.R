@@ -7,12 +7,12 @@ library("MASS")
 fsim <- function(seed, p, n , n.test, corr, Mu, tau){ 
   source('DeselectBoost.R')
   
-  selectedVar.mu.risk = vector('list',8) 
-  selectedVar.sigma.risk = vector('list',8)
-  true.positive.mu.risk = vector('list',8) 
-  false.positive.mu.risk = vector('list',8)
-  true.positive.sigma.risk = vector('list',8) 
-  false.positive.sigma.risk = vector('list',8)
+  selectedVar.mu.risk <- vector('list',8) 
+  selectedVar.sigma.risk <- vector('list',8)
+  true.positive.mu.risk <- vector('list',8) 
+  false.positive.mu.risk <- vector('list',8)
+  true.positive.sigma.risk <- vector('list',8) 
+  false.positive.sigma.risk <- vector('list',8)
   Likelihood <- vector('list',8)
 
   loss <- function(y,mu,f){ -sum(dnorm( y,  mu, exp(f), log = TRUE)) }
@@ -30,25 +30,25 @@ fsim <- function(seed, p, n , n.test, corr, Mu, tau){
   X.test = mvrnorm(n.test , mu, sigma)
   dat.test = data.frame(X.test, y = rnorm(n.test, mean = X.test %*% beta_mu, sd = exp(-1 + X.test %*% beta_sigma)))
   
-  LSS = glmboostLSS(list(mu = y ~ .,sigma = y ~ .), data = dat.train, families = GaussianLSS(), method = 'noncyclic',control = boost_control(mstop = 2000,nu=0.005))
+  LSS <- glmboostLSS(list(mu = y ~ .,sigma = y ~ .), data = dat.train, families = GaussianLSS(), method = 'noncyclic',control = boost_control(mstop = 2000,nu=0.005))
   cv25 <- cv(model.weights(LSS),type = 'kfold')
-  cvr = cvrisk(LSS, folds = cv25, grid = 1:2000, papply = mclapply, trace = F)  
-  stopIT = mstop(cvr)
+  cvr <- cvrisk(LSS, folds = cv25, grid = 1:2000, papply = mclapply, trace = F)  
+  stopIT <- mstop(cvr)
   
   if(stopIT == 9000){
     cvr = cvrisk(LSS, folds = cv25, grid = 1:20000, papply = mclapply, trace = F) 
   }
   
-  stopIT = mstop(cvr)
+  stopIT <- mstop(cvr)
   LSS[mstop(cvr)] 
-  LSS = glmboostLSS(list(mu = y ~ .,sigma = y ~ .), data = dat.train, families = GaussianLSS(), method = 'noncyclic',control = boost_control(mstop = stopIT,nu=0.005)) # so that combined_risk has the correct length
+  LSS <- glmboostLSS(list(mu = y ~ .,sigma = y ~ .), data = dat.train, families = GaussianLSS(), method = 'noncyclic',control = boost_control(mstop = stopIT,nu=0.005)) # so that combined_risk has the correct length
   
   
   nameVar <- names(dat.train)[1:p] 
-  true.var.mu = nameVar[beta_mu!=0]
-  false.var.mu = nameVar[beta_mu==0]
-  true.var.sigma = nameVar[beta_sigma!=0]
-  false.var.sigma = nameVar[beta_sigma==0]
+  true.var.mu <- nameVar[beta_mu!=0]
+  false.var.mu <- nameVar[beta_mu==0]
+  true.var.sigma <- nameVar[beta_sigma!=0]
+  false.var.sigma <- nameVar[beta_sigma==0]
   
   selectedVar.mu.risk[[3]] <- names(coef(LSS$mu)[-1])
   selectedVar.sigma.risk[[3]] <- names(coef(LSS$sigma)[-1])
@@ -57,14 +57,14 @@ fsim <- function(seed, p, n , n.test, corr, Mu, tau){
   true.positive.sigma.risk[[3]] <- length(which(true.var.sigma %in% names(coef(LSS$sigma))))
   false.positive.sigma.risk[[3]] <- length(which(false.var.sigma %in% names(coef(LSS$sigma))))
   
-  Likelihood[[3]] = loss(y = dat.test$y,mu = predict(LSS$mu,newdata=dat.test),f = predict(LSS$sigma, type = "response", newdata = dat.test))
+  Likelihood[[3]] <- loss(y = dat.test$y,mu = predict(LSS$mu,newdata=dat.test),f = predict(LSS$sigma, type = "response", newdata = dat.test))
   
   #----- oSE 
   se_cv = sd(cvr[,stopIT])/sqrt(dim(cv25)[2])
   error_mstop <- mean(cvr[,stopIT])
   mean_cv <- apply(cvr[,1:stopIT], 2, mean)
   opt_stop_oSE =  which.min(mean_cv > se_cv + error_mstop) - 1
-  LSS_oSE = LSS[opt_stop_oSE]
+  LSS_oSE <- LSS[opt_stop_oSE]
 
   selectedVar.mu.risk[[1]] <- names(coef(LSS_oSE$mu)[-1])
   selectedVar.sigma.risk[[1]] <- names(coef(LSS_oSE$sigma)[-1])
@@ -98,15 +98,15 @@ fsim <- function(seed, p, n , n.test, corr, Mu, tau){
     
     LSS_after <- DeselectBoost(LSS, fam = GaussianLSS(), data = dat.train, tau = k)
     
-    selectedVar.mu.risk[[i]] <-  names(coef(LSS_after$model$mu)[-1])
+    selectedVar.mu.risk[[i]] <-  names(coef(LSS_after$mu)[-1])
     true.positive.mu.risk[[i]] <- length(which(true.var.mu %in% selectedVar.mu.risk[[i]]))
     false.positive.mu.risk[[i]] <- length(which(false.var.mu %in% selectedVar.mu.risk[[i]]))
     
-    selectedVar.sigma.risk[[i]] <-  names(coef(LSS_after$model$sigma)[-1])
+    selectedVar.sigma.risk[[i]] <-  names(coef(LSS_after$sigma)[-1])
     true.positive.sigma.risk[[i]] <- length(which(true.var.sigma %in% selectedVar.sigma.risk[[i]]))
     false.positive.sigma.risk[[i]] <- length(which(false.var.sigma %in% selectedVar.sigma.risk[[i]]))
     
-    Likelihood[[i]] <- loss(y = dat.test$y, mu = predict(LSS_after$model$mu,newdata=dat.test, type = 'response'), f = predict(LSS_after$model$sigma, type = "response", newdata = dat.test))
+    Likelihood[[i]] <- loss(y <- dat.test$y, mu = predict(LSS_after$mu,newdata=dat.test, type = 'response'), f = predict(LSS_after$sigma, type = "response", newdata = dat.test))
   }
   
   return(list(mu = selectedVar.mu.risk, sigma = selectedVar.sigma.risk, Likelihood = Likelihood, seed = seed, true.positive.mu.risk = true.positive.mu.risk, false.positive.mu.risk = false.positive.mu.risk,  true.positive.sigma.risk = true.positive.sigma.risk, false.positive.sigma.risk = false.positive.sigma.risk , mstop = stopIT, opt_stop_oSE = opt_stop_oSE, opt_stop_rC = opt_stop_rC, beta_mu = beta_mu, beta_sigma = beta_sigma))

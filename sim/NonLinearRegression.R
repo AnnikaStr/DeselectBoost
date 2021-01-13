@@ -6,9 +6,9 @@ require('mvtnorm')
 fsim <- function(seed, n, p, pinf, n.test, mu, sigma.y ,corr){
   source('DeselectBoost.R')
   
-  selectedVar.risk = vector('list',9) 
-  true.positive.risk = vector('list',9) 
-  false.positive.risk = vector('list',9)
+  selectedVar.risk <- vector('list',9) 
+  true.positive.risk <- vector('list',9) 
+  false.positive.risk <- vector('list',9)
   MSEP <- vector('list',9)
   
   loss <- function(y,f){(y - f)^2}
@@ -25,10 +25,10 @@ fsim <- function(seed, n, p, pinf, n.test, mu, sigma.y ,corr){
   X.test = rmvnorm(n.test ,mean = mean_X, sigma = sigma_X)
   dat.test = data.frame(X.test, y = rnorm(n.test, beta[1]*sin(X.test[,1]) + beta[2]*(X.test[,2])^3 + beta[3] * (X.test[,3]^2) +  beta[4]*X.test[,4] +  beta[5]*X.test[,5] +  beta[6]*X.test[,6] , sigma.y))
 
-  glm1 = gamboost(y ~ ., data = dat.train, control = boost_control(mstop = 500)) 
+  glm1 <- gamboost(y ~ ., data = dat.train, control = boost_control(mstop = 500)) 
   cv25 <- cv(model.weights(glm1),type = 'kfold')
-  cvr = cvrisk(glm1, folds = cv25, grid = 1:10000, papply = mclapply)
-  stopIT = mstop(cvr)
+  cvr <- cvrisk(glm1, folds = cv25, grid = 1:1500, papply = mclapply) #10000
+  stopIT <- mstop(cvr)
   glm1[mstop(cvr)]
   
   nameVar <- names(dat.train)[1:p] 
@@ -38,7 +38,7 @@ fsim <- function(seed, n, p, pinf, n.test, mu, sigma.y ,corr){
   selectedVar.risk[[3]] <- names(coef(glm1)[-1])
   true.positive.risk[[3]] <- length(which(true.var %in% names(coef(glm1))))
   false.positive.risk[[3]] <- length(which(false.var %in% names(coef(glm1))))
-  MSEP[[3]] = mean(loss(dat.test$y,predict(glm1, newdata = dat.test,type = 'response')))
+  MSEP[[3]] <- mean(loss(dat.test$y,predict(glm1, newdata = dat.test,type = 'response')))
   
   #################################
   #---- DeselectBoost
@@ -48,21 +48,21 @@ fsim <- function(seed, n, p, pinf, n.test, mu, sigma.y ,corr){
     
     glm1_after <- DeselectBoost(glm1, data = dat.train, fam = Gaussian(), tau = k)
     
-    selectedVar.risk[[i]] <- names(coef(glm1_after$model)[-1])
+    selectedVar.risk[[i]] <- names(coef(glm1_after)[-1])
     true.positive.risk[[i]] <- length(which(true.var %in% selectedVar.risk[[i]]))
     false.positive.risk[[i]] <- length(which(false.var %in% selectedVar.risk[[i]]))
     
-    MSEP[[i]] = mean(loss(dat.test$y, predict(glm1_after$model, newdata = dat.test, type = 'response')))
+    MSEP[[i]] <- mean(loss(dat.test$y, predict(glm1_after, newdata = dat.test, type = 'response')))
     
   }
   
   #################################
   #----- oSE 
-  se_cv = sd(cvr[,stopIT])/sqrt(dim(cv25)[2])
+  se_cv <- sd(cvr[,stopIT])/sqrt(dim(cv25)[2])
   error_mstop <- mean(cvr[,stopIT])
   mean_cv <- apply(cvr[,1:stopIT], 2, mean)
-  opt_stop_oSE =  which.min(mean_cv > se_cv + error_mstop)-1
-  glm1_oSE = glm1[opt_stop_oSE]
+  opt_stop_oSE <-  which.min(mean_cv > se_cv + error_mstop)-1
+  glm1_oSE <- glm1[opt_stop_oSE]
   
   selectedVar.risk[[1]] <- names(coef(glm1_oSE)[-1])
   true.positive.risk[[1]] <- length(which(true.var %in% names(coef(glm1_oSE))))
@@ -75,8 +75,8 @@ fsim <- function(seed, n, p, pinf, n.test, mu, sigma.y ,corr){
   c_rC = 1.05
   error_mstop <- mean(cvr[,stopIT])
   mean_cv <- apply(cvr[,1:stopIT], 2, mean)
-  opt_stop_rC = which.min(mean_cv > c_rC * error_mstop)-1
-  glm1_robustC = glm1[opt_stop_rC]
+  opt_stop_rC <- which.min(mean_cv > c_rC * error_mstop)-1
+  glm1_robustC <- glm1[opt_stop_rC]
   
   selectedVar.risk[[2]] <- names(coef(glm1_robustC)[-1])
   true.positive.risk[[2]] <- length(which(true.var %in% names(coef(glm1_robustC))))
