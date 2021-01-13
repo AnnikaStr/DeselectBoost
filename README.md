@@ -2,7 +2,7 @@
 Function to enhance the sparsity of statistical boosting models by deselecting the base-learners with a minor impact on the total risk reduction. The deselection is done by considering the attributable (default) or cumulative risk reduction. 
 
 # Example
-```
+```r
 data("bodyfat", package = "TH.data")
 
 ### linear model 
