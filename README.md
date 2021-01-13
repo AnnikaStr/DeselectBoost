@@ -22,7 +22,7 @@ coef(bodyfat.db)
 DeselectBoost(bodyfat.gb,fam = Gaussian(), method = 'cumulative')
 
 ### additive model
-bodyfat.gam <- gamboost(DEXfat~.,data = bodyfat, baselearner = 'bbs')
+bodyfat.gam <- gamboost(DEXfat~.,data = bodyfat)
 coef(bodyfat.gam)
 
 bodyfat.db1 <- DeselectBoost(bodyfat.gam, fam = Gaussian(), data = bodyfat)
