@@ -73,7 +73,7 @@ DeselectBoost_1 <- function(object, data = NULL, fam, tau = NULL, method = c('at
   }
   
   out <- model_after
-  out$tau  = 0.01
+  out$tau  = tau
   out$deselectmethod = method[1] 
   class(out) <- c(class(out))
   
